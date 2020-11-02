@@ -12,10 +12,13 @@ Regtest bitcoin node with wallet and 101 block for experiments.
 
 #+BEGIN_SRC conf :tangle .bitcoin/bitcoin.conf
 regtest=1
-daemon=1
+server=1
 
-user=cryptokasten
-password=secret
+[regtest]
+rpcbind=0.0.0.0
+rpcuser=cryptokasten
+rpcpassword=secret
+rpcallowip=0.0.0.0/0
 #+END_SRC
 
 ** Generate blockchain
@@ -46,7 +49,7 @@ su bitcoin
 *** Run bitcoind
 
 #+BEGIN_SRC sh
-bitcoind
+bitcoind -daemon
 #+END_SRC
 
 *** Create new address
@@ -112,4 +115,20 @@ ADD --chown=bitcoin:bitcoin .bitcoin /home/bitcoin/.bitcoin
 docker build -t cryptokasten/bitcoin-regtest-env .
 #+END_SRC
 
+** Run
 
+#+BEGIN_SRC sh
+docker run --rm --detach --name bitcoin-regtest-env cryptokasten/bitcoin-regtest-env
+#+END_SRC
+
+** Debug
+
+#+BEGIN_SRC sh
+docker exec -it bitcoin-regtest-env bash
+#+END_SRC
+
+** Stop
+
+#+BEGIN_SRC sh
+docker kill bitcoin-regtest-env
+#+END_SRC
