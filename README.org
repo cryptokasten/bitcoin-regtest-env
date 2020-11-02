@@ -1,0 +1,115 @@
+#+TITLE: Bitcoin regtest environment
+#+TAGS: cryptokasten, cryptokasten-env, bitcoin, regtest
+#+PROPERTY: header-args :session *shell bitcoin-regtest-env* :results silent raw
+#+OPTIONS: ^:nil
+
+[[https://github.com/cryptokasten][file:https://img.shields.io/badge/dynamic/json.svg?url=https://api.github.com/users/cryptokasten&label=Cryptokasten&query=$.public_repos]]
+[[https://github.com/cryptokasten-env][file:https://img.shields.io/badge/env-orange.svg]]
+
+Regtest bitcoin node with wallet and 101 block for experiments.
+
+** Bitcoin config
+
+#+BEGIN_SRC conf :tangle .bitcoin/bitcoin.conf
+regtest=1
+daemon=1
+
+user=cryptokasten
+password=secret
+#+END_SRC
+
+** Generate blockchain
+*** Run base image
+
+#+BEGIN_SRC sh
+docker run --rm -it -v `pwd`/.bitcoin:/home/bitcoin/.bitcoin ruimarinho/bitcoin-core:0.20.1 bash
+#+END_SRC
+
+*** Clean up .bitcoin dir
+
+#+BEGIN_SRC sh
+rm -rf /home/bitcoin/.bitcoin/regtest
+#+END_SRC
+
+*** Set up a permissions
+
+#+BEGIN_SRC sh
+chown bitcoin:bitcoin -R /home/bitcoin/.bitcoin
+#+END_SRC
+
+*** Become a user
+
+#+BEGIN_SRC sh
+su bitcoin
+#+END_SRC
+
+*** Run bitcoind
+
+#+BEGIN_SRC sh
+bitcoind
+#+END_SRC
+
+*** Create new address
+
+#+BEGIN_SRC sh
+ADDRESS=`bitcoin-cli getnewaddress`
+#+END_SRC
+
+*** Generate 101 blocks
+
+#+BEGIN_SRC sh
+bitcoin-cli generatetoaddress 101 "$ADDRESS"
+#+END_SRC
+
+*** Stop bitcoind
+
+#+BEGIN_SRC sh
+bitcoin-cli stop
+#+END_SRC
+
+*** Stop session
+
+Close su session.
+
+#+BEGIN_SRC sh
+exit
+#+END_SRC
+
+Close docker session.
+
+#+BEGIN_SRC sh
+exit
+#+END_SRC
+
+*** Set data directory permissions
+
+#+BEGIN_SRC sh
+sudo chown `id -un`:`id -gn` -R .bitcoin
+#+END_SRC
+
+** Dockerfile
+   :PROPERTIES:
+   :header-args: :tangle Dockerfile
+   :END:
+
+*** Base docker image
+
+[[https://hub.docker.com/r/ruimarinho/bitcoin-core/][ruimarinho/bitcoin-core:0.20.1]]
+
+#+BEGIN_SRC Dockerfile
+FROM ruimarinho/bitcoin-core:0.20.1
+#+END_SRC
+
+*** Copy .bitcoin
+
+#+BEGIN_SRC Dockerfile
+ADD --chown=bitcoin:bitcoin .bitcoin /home/bitcoin/.bitcoin
+#+END_SRC
+
+** Build
+
+#+BEGIN_SRC sh
+docker build -t cryptokasten/bitcoin-regtest-env .
+#+END_SRC
+
+
